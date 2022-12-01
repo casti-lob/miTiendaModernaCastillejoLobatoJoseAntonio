@@ -2,6 +2,7 @@ package com.jacaranda.servlet;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -44,8 +45,11 @@ public class SingUpUser extends HttpServlet {
 		String nombre = request.getParameter("nombre");
 		String apellido = request.getParameter("apellido");
 		LocalDate fechaNacimiento = null;
+		LocalDate dateNow= LocalDate.now();
+		int old;
 		try {
 			fechaNacimiento = LocalDate.parse(request.getParameter("fechaNacimiento"));
+			old = (int) ChronoUnit.YEARS.between(fechaNacimiento, dateNow);
 		}catch (Exception e) {
 			response.getWriter().append((UserUtils.errorHtml("Error inesperdo","406")));
 			throw e;
@@ -54,9 +58,14 @@ public class SingUpUser extends HttpServlet {
 		
 		if((username != null || !username.isEmpty()) && (password != null || !password.isEmpty()) && (nombre != null || !nombre.isEmpty()) 
 				&& (apellido != null || !apellido.isEmpty()) && (genero != null || !genero.isEmpty())) {
-			if(UserCRUD.getUser(username)==null && password.length()>=6){
-				UserCRUD.saveUser(username.trim(),UserUtils.encript(password.trim()),nombre.trim(),apellido.trim(),fechaNacimiento,genero.trim(),false);
-				response.sendRedirect("Index.jsp");
+			if(UserCRUD.getUser(username)==null && password.length()>=6 ){
+				if(old>17) {
+					UserCRUD.saveUser(username.trim(),UserUtils.encript(password.trim()),nombre.trim(),apellido.trim(),fechaNacimiento,genero.trim(),false);
+					response.sendRedirect("Index.jsp");
+				}else {
+					response.getWriter().append((UserUtils.errorHtml("El usuario es menor de edad","202")));
+				}
+				
 			}else{
 				response.getWriter().append((UserUtils.errorHtml("El usuario ya esta registrado","202")));
 			}
